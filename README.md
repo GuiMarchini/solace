@@ -4,10 +4,24 @@
 
 ## Gameplay
 
-![Gameplay 1](docs/images/game1.png)
-![Gameplay 2](docs/images/game2.png)
-![Gameplay 3](docs/images/game3.png)
-![Gameplay 4](docs/images/game4.png)
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/images/game1.png" width="100%">
+    </td>
+    <td width="50%">
+      <img src="docs/images/game2.png" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/images/game3.png" width="100%">
+    </td>
+    <td width="50%">
+      <img src="docs/images/game4.png" width="100%">
+    </td>
+  </tr>
+</table>
 
 Godot 4.7 · Forward+ · GDScript. Abra o projeto e rode `scenes/main/main.tscn` (é a cena principal, F5).
 
