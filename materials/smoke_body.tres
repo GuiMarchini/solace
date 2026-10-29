@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/smoke_body.gdshader" id="1_shader"]
+[ext_resource type="Material" path="res://materials/smoke_shell.tres" id="2_shell"]
+
+[resource]
+next_pass = ExtResource("2_shell")
+shader = ExtResource("1_shader")

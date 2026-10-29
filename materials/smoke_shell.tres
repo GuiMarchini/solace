@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/smoke_shell.gdshader" id="1_shader"]
+[ext_resource type="Material" path="res://materials/smoke_shell_2.tres" id="2_next"]
+
+[resource]
+render_priority = 1
+next_pass = ExtResource("2_next")
+shader = ExtResource("1_shader")
+shader_parameter/layer = 0.35

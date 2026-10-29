@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_ctrl"]
+[ext_resource type="Script" path="res://scripts/player/foot_motor.gd" id="2_foot"]
+[ext_resource type="Script" path="res://scripts/hoverboard/hover_motor.gd" id="3_hover"]
+[ext_resource type="Script" path="res://scripts/player/player_visual.gd" id="4_visual"]
+[ext_resource type="Script" path="res://scripts/player/spirit_model.gd" id="5_model"]
+[ext_resource type="Script" path="res://scripts/effects/ribbons.gd" id="9_ribbons"]
+[ext_resource type="Script" path="res://scripts/player/motion_context.gd" id="12_ctx"]
+[ext_resource type="PackedScene" path="res://scenes/hoverboard/hoverboard.tscn" id="10_board"]
+[ext_resource type="Script" path="res://scripts/effects/player_fx.gd" id="11_fx"]
+[ext_resource type="Script" path="res://scripts/effects/cloak.gd" id="20_cloak"]
+[ext_resource type="Script" path="res://scripts/effects/smoke_body.gd" id="21_smoke"]
+[ext_resource type="Material" path="res://materials/smoke_body.tres" id="26_body"]
+[ext_resource type="Material" path="res://materials/cloak.tres" id="22_cloth"]
+[ext_resource type="Material" path="res://materials/hood.tres" id="23_hood"]
+[ext_resource type="Material" path="res://materials/clasp.tres" id="24_clasp"]
+[ext_resource type="Material" path="res://materials/cloak_strip.tres" id="25_strip"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.22
+height = 1.42
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_ctrl")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.71, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="FootMotor" type="Node" parent="."]
+script = ExtResource("2_foot")
+
+[node name="HoverMotor" type="Node" parent="."]
+script = ExtResource("3_hover")
+
+[node name="Visual" type="Node3D" parent="."]
+physics_interpolation_mode = 2
+top_level = true
+script = ExtResource("4_visual")
+
+[node name="SpiritModel" type="Node3D" parent="Visual"]
+script = ExtResource("5_model")
+body_material = ExtResource("26_body")
+
+[node name="SmokeBody" type="Node3D" parent="Visual"]
+script = ExtResource("21_smoke")
+body_material = ExtResource("26_body")
+
+[node name="Cloak" type="Node3D" parent="Visual"]
+script = ExtResource("20_cloak")
+cloth_material = ExtResource("22_cloth")
+hood_material = ExtResource("23_hood")
+clasp_material = ExtResource("24_clasp")
+
+[node name="Ribbons" type="MeshInstance3D" parent="Visual"]
+script = ExtResource("9_ribbons")
+ribbon_material = ExtResource("25_strip")
+
+[node name="Hoverboard" parent="Visual" instance=ExtResource("10_board")]
+
+[node name="PlayerFX" type="Node3D" parent="Visual"]
+script = ExtResource("11_fx")
+
+[node name="MotionContext" type="Node" parent="Visual"]
+script = ExtResource("12_ctx")

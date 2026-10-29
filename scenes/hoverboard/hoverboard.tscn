@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/hoverboard/hoverboard.gd" id="1_board"]
+[ext_resource type="Material" path="res://materials/sword.tres" id="2_mat"]
+
+[node name="Hoverboard" type="Node3D"]
+script = ExtResource("1_board")
+board_material = ExtResource("2_mat")
