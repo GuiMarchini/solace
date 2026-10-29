@@ -1,4 +1,13 @@
-# Solace: The Last Spirit — Demo 0.1
+# Solace: The Last Spirit
+
+![SOLACE Cover](docs/images/solace.png)
+
+## Gameplay
+
+![Gameplay 1](docs/images/game1.png)
+![Gameplay 2](docs/images/game2.png)
+![Gameplay 3](docs/images/game3.png)
+![Gameplay 4](docs/images/game4.png)
 
 Godot 4.7 · Forward+ · GDScript. Abra o projeto e rode `scenes/main/main.tscn` (é a cena principal, F5).
 
