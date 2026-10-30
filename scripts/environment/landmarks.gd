@@ -1,9 +1,9 @@
 class_name Landmarks
 extends Node3D
-## Ancient silhouettes: a distant cluster of colossal spires (the focal point,
-## marked by a faint beam of light), broken arches and obelisks on the horizon,
-## plus a handful of weathered stones inside the playable area for scale.
-## Distant pieces are pure scenery; near stones get simple collision.
+## The focal point on the horizon: a distant cluster of colossal spires marked by a faint
+## beam of light. Pure scenery, in the same weathered stone as the ruins (everything else,
+## near and far, is built by WorldBuilder). `_build_horizon_ruins` is kept for reference
+## but no longer used (its thin rings read as artefacts against the sun).
 
 @export var terrain_path: NodePath = ^"../DuneTerrain"
 @export var stone_color := Color(0.62, 0.5, 0.42)
@@ -14,8 +14,8 @@ extends Node3D
 
 var _terrain: DuneTerrain
 var _rng := RandomNumberGenerator.new()
-var _near_mat: StandardMaterial3D
-var _far_mat: StandardMaterial3D
+var _near_mat: Material
+var _far_mat: Material
 var _glyph_mat: StandardMaterial3D
 
 
@@ -24,12 +24,20 @@ func _ready() -> void:
 	_terrain = get_node_or_null(terrain_path) as DuneTerrain
 	_near_mat = _stone_material(stone_color)
 	_far_mat = _stone_material(far_stone_color)
+	var far := ShaderMaterial.new()
+	far.shader = load("res://shaders/stone.gdshader")
+	far.set_shader_parameter("strata", 0.0)
+	far.set_shader_parameter("block_size", 9.0)
+	far.set_shader_parameter("detail_distance", 30.0)
+	far.set_shader_parameter("sand_on_top", 0.5)
+	far.set_shader_parameter("stone_light", Color(0.92, 0.8, 0.68))
+	far.set_shader_parameter("stone_mid", Color(0.78, 0.63, 0.53))
+	far.set_shader_parameter("stone_dark", Color(0.55, 0.42, 0.38))
+	_far_mat = far
 	_glyph_mat = StandardMaterial3D.new()
 	_glyph_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_glyph_mat.albedo_color = glyph_color * 2.2
 	_build_spire_city()
-	_build_horizon_ruins()
-	_build_near_stones()
 
 
 func _ground(x: float, z: float) -> float:

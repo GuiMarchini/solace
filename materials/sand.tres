@@ -16,9 +16,10 @@ noise = SubResource("FastNoiseLite_sand")
 
 [resource]
 shader = ExtResource("1_shader")
-shader_parameter/sand_light = Color(0.98, 0.7, 0.43, 1)
-shader_parameter/sand_mid = Color(0.93, 0.56, 0.31, 1)
-shader_parameter/sand_dark = Color(0.8, 0.42, 0.22, 1)
+shader_parameter/sand_light = Color(1, 0.79, 0.56, 1)
+shader_parameter/sand_mid = Color(0.95, 0.64, 0.4, 1)
+shader_parameter/sand_dark = Color(0.84, 0.5, 0.31, 1)
+shader_parameter/shade_tint = Color(0.72, 0.5, 0.55, 1)
 shader_parameter/noise_tex = SubResource("NoiseTexture2D_sand")
 shader_parameter/wind_dir = Vector2(0.42, 0.91)
 shader_parameter/ripple_frequency = 9.0

@@ -7,7 +7,7 @@ uniform vec3 upper_color : source_color = vec3(0.42, 0.50, 0.74);
 uniform vec3 horizon_color : source_color = vec3(1.0, 0.74, 0.52);
 uniform vec3 ground_haze : source_color = vec3(0.86, 0.62, 0.46);
 uniform vec3 sun_glow_color : source_color = vec3(1.0, 0.56, 0.26);
-uniform vec3 opposite_tint : source_color = vec3(0.62, 0.55, 0.78);
+uniform vec3 opposite_tint : source_color = vec3(0.62, 0.66, 0.84);
 uniform float horizon_falloff = 3.2;
 uniform float sun_glow = 1.0;
 uniform float sun_disk_size = 0.022;
@@ -15,6 +15,11 @@ uniform float sun_disk_energy = 28.0;
 uniform sampler2D cloud_noise : filter_linear_mipmap, repeat_enable;
 uniform float cloud_amount = 0.45;
 uniform float brightness = 1.0;
+// Banks of soft cumulus resting on the horizon (gives the sky its scale).
+uniform float bank_amount = 0.6;
+uniform float bank_height = 0.1;
+uniform vec3 bank_lit : source_color = vec3(1.0, 0.9, 0.8);
+uniform vec3 bank_shade : source_color = vec3(0.68, 0.66, 0.8);
 
 void sky() {
 	vec3 d = EYEDIR;
@@ -41,6 +46,19 @@ void sky() {
 		cloud_col = mix(cloud_col, opposite_tint * 1.1, away * 0.5);
 		col = mix(col, cloud_col, clouds * cloud_amount);
 	}
+
+	// Cumulus banks: a ragged skyline of billows along the horizon, lit warm on the side
+	// toward the sun and on their tops, lilac-grey below, fading into the haze.
+	float az = atan(d.x, d.z) / 6.2831853;
+	float skyline = texture(cloud_noise, vec2(az * 3.0, 0.31)).r;
+	float billow = texture(cloud_noise, vec2(az * 14.0, y * 3.0 + 0.5)).r;
+	float top = bank_height * (skyline * skyline * 1.6 + 0.08) + (billow - 0.5) * 0.035;
+	float inner = texture(cloud_noise, vec2(az * 9.0, y * 6.0 + 0.2)).r;
+	float bank = smoothstep(top, top - 0.035, y) * smoothstep(-0.03, 0.03, y) * (0.55 + 0.45 * inner);
+	float lit_k = smoothstep(top - 0.07, top, y) * 0.7 + pow(sd, 2.0) * 0.6;
+	vec3 bank_col = mix(bank_shade, bank_lit, clamp(lit_k, 0.0, 1.0));
+	bank_col = mix(bank_col, horizon, 0.45 + 0.4 * (1.0 - smoothstep(0.0, 0.06, y)));
+	col = mix(col, bank_col, bank * bank_amount);
 
 	float ang = acos(clamp(dot(d, sun_dir), -1.0, 1.0));
 	col += LIGHT0_COLOR * sun_disk_energy * (1.0 - smoothstep(sun_disk_size * 0.75, sun_disk_size, ang));

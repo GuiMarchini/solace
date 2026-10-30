@@ -93,6 +93,9 @@ func _check_collision_alignment() -> void:
 		if hit.is_empty():
 			misses += 1
 			continue
+		# The oasis water is ridden on too (its own body): only the dunes are compared.
+		if (hit["collider"] as Node).name != "DunesBody":
+			continue
 		var p: Vector3 = hit["position"]
 		max_err = maxf(max_err, absf(p.y - _terrain.height_at(x, z)))
 	_log.append("collision vs analytic height: max error %.3f m, misses %d/300" % [max_err, misses])

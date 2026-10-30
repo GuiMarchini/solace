@@ -14,6 +14,8 @@ extends Node3D
 ## Some areas are deep, loose sand (`softness_at`): the sand there looks fresher and
 ## throws up far more grains and dust (SandFX); the same field is baked into a texture
 ## for the sand shader.
+## The places of WorldLayout shape the ground too: a basin for the Drowned Court's water
+## and a calmer strip of sand under the Pilgrim's Colonnade.
 
 @export var seed := 7
 @export_group("Playable area")
@@ -57,6 +59,7 @@ var _wind2 := Vector2.ZERO
 var _heights := PackedFloat32Array()
 var _ridge_mask := FastNoiseLite.new()
 var _soft := FastNoiseLite.new()
+var _avenue_h := Vector2.ZERO
 
 ## The terrain in play (effects and tools query it).
 static var instance: DuneTerrain
@@ -98,10 +101,63 @@ func _setup_noise() -> void:
 	_wind = Vector2(sin(a), cos(a))
 	var a2 := a + deg_to_rad(68.0)
 	_wind2 = Vector2(sin(a2), cos(a2))
+	_setup_sites()
+
+
+## Levels for the shaped places: the avenue follows the mean ground between its ends; the
+## oasis water sits below the lowest point of the dunes around its basin.
+func _setup_sites() -> void:
+	_avenue_h = Vector2(_mean_ground(WorldLayout.AVENUE_A, 30.0), _mean_ground(WorldLayout.AVENUE_B, 30.0))
+	var low := INF
+	for i in 24:
+		var a := TAU * i / 24.0
+		var p := WorldLayout.OASIS + Vector2(cos(a), sin(a)) * WorldLayout.OASIS_RIM_RADIUS
+		low = minf(low, _natural_at(p.x, p.y))
+	WorldLayout.water_level = low - 3.0
+
+
+func _mean_ground(c: Vector2, r: float) -> float:
+	var sum := 0.0
+	for i in 9:
+		var p := c + Vector2(cos(i * 0.7), sin(i * 0.7)) * r * (i / 8.0)
+		sum += _natural_at(p.x, p.y)
+	return sum / 9.0
 
 
 ## Terrain height in world units at world XZ. Safe to call anywhere, any time after _ready.
 func height_at(x: float, z: float) -> float:
+	var h := _natural_at(x, z)
+	var p := Vector2(x, z)
+	# The Drowned Court: a bowl under the water, its shore rising gently into the dunes.
+	var d := p.distance_to(WorldLayout.OASIS)
+	if d < WorldLayout.OASIS_RIM_RADIUS:
+		# An irregular shore: coves and points instead of a round pool.
+		var to := p - WorldLayout.OASIS
+		var ang := atan2(to.y, to.x)
+		var wr := WorldLayout.OASIS_WATER_RADIUS * (1.0 + _amp.get_noise_2d(cos(ang) * 260.0, sin(ang) * 260.0) * 0.32)
+		var lvl := WorldLayout.water_level
+		var bowl := lvl - WorldLayout.OASIS_DEPTH * (1.0 - pow(minf(d / wr, 1.0), 2.0)) + maxf(d - wr, 0.0) * 0.45 - 0.5
+		h = lerpf(h, bowl, 1.0 - smoothstep(wr * 0.9, WorldLayout.OASIS_RIM_RADIUS, d))
+	# The way from the start to the gateway: lower, calmer dunes (the arch in sight).
+	var apd := WorldLayout.segment_distance(p, WorldLayout.APPROACH_A, WorldLayout.AVENUE_A)
+	if apd < WorldLayout.APPROACH_HALF_WIDTH + 60.0:
+		var ab2 := WorldLayout.AVENUE_A - WorldLayout.APPROACH_A
+		var t2 := clampf((p - WorldLayout.APPROACH_A).dot(ab2) / ab2.length_squared(), 0.0, 1.0)
+		var calm_h := lerpf(_natural_at(WorldLayout.APPROACH_A.x, WorldLayout.APPROACH_A.y), _avenue_h.x, t2)
+		h = lerpf(h, calm_h + (h - calm_h) * 0.3, 1.0 - smoothstep(WorldLayout.APPROACH_HALF_WIDTH, WorldLayout.APPROACH_HALF_WIDTH + 60.0, apd))
+	# The Pilgrim's Colonnade: the dunes calmed into a broad, gently rolling road.
+	var ad := WorldLayout.avenue_distance(p)
+	var hw := WorldLayout.AVENUE_HALF_WIDTH
+	if ad < hw + 45.0:
+		var ab := WorldLayout.AVENUE_B - WorldLayout.AVENUE_A
+		var t := clampf((p - WorldLayout.AVENUE_A).dot(ab) / ab.length_squared(), 0.0, 1.0)
+		var road := lerpf(_avenue_h.x, _avenue_h.y, smoothstep(0.0, 1.0, t))
+		h = lerpf(h, road + (h - road) * 0.12, 1.0 - smoothstep(hw + 6.0, hw + 45.0, ad))
+	return h
+
+
+## The dunes alone, before the shaped places.
+func _natural_at(x: float, z: float) -> float:
 	var wx := _warp.get_noise_2d(x, z) * warp_strength
 	var wz := _warp.get_noise_2d(x + 913.0, z - 377.0) * warp_strength
 	var qx := x + wx

@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://scripts/environment/dune_terrain.gd" id="3_terrain"]
 [ext_resource type="Material" path="res://materials/sand.tres" id="4_sand"]
 [ext_resource type="Script" path="res://scripts/environment/landmarks.gd" id="5_landmarks"]
+[ext_resource type="Script" path="res://scripts/world/world_builder.gd" id="6_world"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_clouds"]
 noise_type = 1
@@ -20,12 +21,12 @@ noise = SubResource("FastNoiseLite_clouds")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("1_sky")
-shader_parameter/zenith_color = Color(0.1, 0.19, 0.46, 1)
-shader_parameter/upper_color = Color(0.3, 0.44, 0.74, 1)
+shader_parameter/zenith_color = Color(0.14, 0.3, 0.62, 1)
+shader_parameter/upper_color = Color(0.38, 0.55, 0.84, 1)
 shader_parameter/horizon_color = Color(1, 0.7, 0.45, 1)
 shader_parameter/ground_haze = Color(0.86, 0.62, 0.46, 1)
 shader_parameter/sun_glow_color = Color(1, 0.56, 0.26, 1)
-shader_parameter/opposite_tint = Color(0.5, 0.56, 0.82, 1)
+shader_parameter/opposite_tint = Color(0.6, 0.68, 0.86, 1)
 shader_parameter/horizon_falloff = 3.2
 shader_parameter/sun_glow = 1.0
 shader_parameter/sun_disk_size = 0.022
@@ -62,17 +63,25 @@ glow_hdr_threshold = 1.3
 glow_hdr_scale = 2.0
 fog_enabled = true
 fog_mode = 0
-fog_light_color = Color(0.9, 0.7, 0.55, 1)
+fog_light_color = Color(0.94, 0.78, 0.64, 1)
 fog_light_energy = 1.0
-fog_sun_scatter = 0.35
-fog_density = 0.00026
-fog_aerial_perspective = 0.6
+fog_sun_scatter = 0.2
+fog_density = 0.0002
+fog_aerial_perspective = 0.45
 fog_sky_affect = 0.12
 fog_height = 25.0
 fog_height_density = 0.0015
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.0006
+volumetric_fog_albedo = Color(0.98, 0.86, 0.74, 1)
+volumetric_fog_anisotropy = 0.55
+volumetric_fog_length = 160.0
+volumetric_fog_detail_spread = 2.0
+volumetric_fog_ambient_inject = 0.15
+volumetric_fog_sky_affect = 0.0
 adjustment_enabled = true
 adjustment_brightness = 1.0
-adjustment_contrast = 1.08
+adjustment_contrast = 1.12
 adjustment_saturation = 1.1
 
 [node name="Desert" type="Node3D"]
@@ -81,8 +90,8 @@ adjustment_saturation = 1.1
 environment = SubResource("Environment_desert")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
-light_color = Color(1, 0.8, 0.6, 1)
-light_energy = 2.3
+light_color = Color(1, 0.84, 0.66, 1)
+light_energy = 2.4
 light_angular_distance = 0.8
 shadow_enabled = true
 shadow_bias = 0.03
@@ -98,7 +107,7 @@ directional_shadow_fade_start = 0.85
 directional_shadow_pancake_size = 40.0
 script = ExtResource("2_sun")
 azimuth_deg = 24.0
-elevation_deg = 9.0
+elevation_deg = 13.0
 
 [node name="DuneTerrain" type="Node3D" parent="."]
 script = ExtResource("3_terrain")
@@ -106,3 +115,6 @@ sand_material = ExtResource("4_sand")
 
 [node name="Landmarks" type="Node3D" parent="."]
 script = ExtResource("5_landmarks")
+
+[node name="World" type="Node3D" parent="."]
+script = ExtResource("6_world")

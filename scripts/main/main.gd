@@ -34,6 +34,8 @@ func _ready() -> void:
 		add_child(load("res://scripts/debug/inspect.gd").new())
 	elif "--tour" in args:
 		add_child(load("res://scripts/debug/screenshot_tour.gd").new())
+	elif "--views" in args:
+		add_child(load("res://scripts/debug/world_views.gd").new())
 
 
 ## Registers an input action at runtime if project.godot doesn't define it

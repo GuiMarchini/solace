@@ -28,6 +28,10 @@ var _bursts: Array[GPUParticles3D] = []
 var _burst_dust: Array[GPUParticles3D] = []
 var _next_burst := 0
 var _height: GPUParticlesCollisionHeightField3D
+# On the oasis water: droplets flung off the edge and behind, and a fine mist.
+var _splash: GPUParticles3D
+var _wake: GPUParticles3D
+var _mist: GPUParticles3D
 var _grain_mat := ShaderMaterial.new()
 
 
@@ -58,6 +62,21 @@ func _ready() -> void:
 		"scale": Vector2(0.5, 1.4), "grow": true, "color": dust_color, "turbulence": true})
 	(_dust.process_material as ParticleProcessMaterial).inherit_velocity_ratio = 0.35
 	add_child(_dust)
+	_splash = Fx.particles({"amount": 260, "lifetime": 0.8, "size": 0.07, "shape": "box",
+		"extents": Vector3(0.05, 0.02, 0.2), "direction": Vector3(1, 1.2, 0), "spread": 22.0,
+		"velocity": Vector2(2.0, 5.5), "gravity": Vector3(0, -9.8, 0), "damping": 0.6,
+		"scale": Vector2(0.5, 1.3), "color": Color(0.9, 0.98, 1.0, 0.95)})
+	add_child(_splash)
+	_wake = Fx.particles({"amount": 200, "lifetime": 0.7, "size": 0.06, "shape": "box",
+		"extents": Vector3(0.12, 0.02, 0.1), "direction": Vector3(0, 1, 0.8), "spread": 14.0,
+		"velocity": Vector2(1.5, 4.0), "gravity": Vector3(0, -9.8, 0), "damping": 0.4,
+		"scale": Vector2(0.5, 1.2), "color": Color(0.88, 0.97, 1.0, 0.9)})
+	add_child(_wake)
+	_mist = Fx.particles({"amount": 90, "lifetime": 1.3, "size": 0.9, "kind": "smoke", "soft": true,
+		"shape": "box", "extents": Vector3(0.2, 0.05, 0.3), "direction": Vector3.UP, "spread": 50.0,
+		"velocity": Vector2(0.3, 1.2), "gravity": Vector3(0, 0.1, 0), "damping": 1.5,
+		"scale": Vector2(0.6, 1.4), "grow": true, "color": Color(0.95, 0.98, 1.0, 0.28), "turbulence": true})
+	add_child(_mist)
 	_height = GPUParticlesCollisionHeightField3D.new()
 	_height.size = Vector3(56.0, 40.0, 56.0)
 	_height.resolution = GPUParticlesCollisionHeightField3D.RESOLUTION_256
@@ -132,6 +151,10 @@ func update(_delta: float, s: Dictionary) -> void:
 	var carve: float = s["carve"]
 	var soft := softness(ground)
 	var dense := (1.0 + 1.6 * soft) * intensity
+	# Over the oasis the sword throws water instead of sand.
+	var wet := contact and WorldLayout.on_water(ground.x, ground.z)
+	var water_y := WorldLayout.water_level
+	contact = contact and not wet
 	var bx := basis.x.normalized()
 	var bz := basis.z.normalized()
 	var flat_z := Vector3(bz.x, 0.0, bz.z).normalized() if Vector2(bz.x, bz.z).length() > 0.1 else Vector3.BACK
@@ -164,6 +187,20 @@ func update(_delta: float, s: Dictionary) -> void:
 	_set_rate(_dust, contact and dust_i > 0.05, dust_i * intensity)
 	if _dust.emitting:
 		_dust.global_position = ground + Vector3.UP * 0.1 + flat_z * 0.3
+	var sx := clampf(speed / 10.0, 0.0, 1.0)
+	var side_i := maxf(carve_i, sx * 0.35)
+	_set_rate(_splash, wet and side_i > 0.05, side_i * intensity)
+	if _splash.emitting:
+		var out := signf(carve) if absf(carve) > 0.03 else 1.0
+		_splash.global_transform = Transform3D(Basis(bx * out, Vector3.UP, flat_z), Vector3(ground.x, water_y + 0.05, ground.z) + bx * out * 0.25)
+		var pm := _splash.process_material as ParticleProcessMaterial
+		pm.initial_velocity_max = 3.0 + speed * 0.22
+	_set_rate(_wake, wet and sx > 0.1, sx * intensity)
+	if _wake.emitting:
+		_wake.global_transform = Transform3D(Basis(bx, Vector3.UP, flat_z), Vector3(ground.x, water_y + 0.05, ground.z) + flat_z * 0.7)
+	_set_rate(_mist, wet and sx > 0.3, sx * 0.8 * intensity)
+	if _mist.emitting:
+		_mist.global_position = Vector3(ground.x, water_y + 0.2, ground.z) + flat_z * 0.8
 
 
 func _set_rate(p: GPUParticles3D, on: bool, ratio: float) -> void:

@@ -38,6 +38,9 @@ uniform float glitter_distance = 18.0;
 // little richer and paler, finely rippled and glinting, so the places where the sword
 // throws up the most sand can be read from afar.
 uniform sampler2D soft_map : filter_linear, repeat_disable;
+// The oasis: centre x, z, radius and the water level. Sand just above the water is wet:
+// darker, a little cooler and glossy.
+uniform vec4 water_zone = vec4(0.0, 0.0, 0.0, -1000.0);
 uniform vec2 soft_map_origin = vec2(-640.0, -640.0);
 uniform float soft_map_size = 1280.0;
 
@@ -119,7 +122,13 @@ void fragment() {
 	// Fine grain (fades out before it gets smaller than a pixel).
 	float gfw = fwidth(xz.x * 7.0) + fwidth(xz.y * 7.0);
 	float grain_vis = 1.0 - smoothstep(0.35, 0.9, gfw);
-	float grain = hash13(vec3(floor(xz * 7.0), 3.0)) - 0.5;
+	// Smooth value noise (interpolated): hard-edged cells read as square pixels.
+	vec2 gp = xz * 7.0;
+	vec2 gi = floor(gp);
+	vec2 gf = fract(gp);
+	gf = gf * gf * (3.0 - 2.0 * gf);
+	float grain = mix(mix(hash13(vec3(gi, 3.0)), hash13(vec3(gi + vec2(1.0, 0.0), 3.0)), gf.x),
+			mix(hash13(vec3(gi + vec2(0.0, 1.0), 3.0)), hash13(vec3(gi + vec2(1.0, 1.0), 3.0)), gf.x), gf.y) - 0.5;
 	col *= 1.0 + grain * grain_strength * 2.0 * grain_vis;
 
 	// Soft hammered mottling and faint ripples bend the normal (analytic, no tiling).
@@ -156,9 +165,17 @@ void fragment() {
 	}
 	glitter = g;
 
+	float wet = 0.0;
+	if (water_zone.z > 0.0) {
+		float inside = 1.0 - smoothstep(water_zone.z * 0.85, water_zone.z, length(world_pos.xz - water_zone.xy));
+		wet = inside * (1.0 - smoothstep(0.0, 1.3, world_pos.y - water_zone.w));
+	}
+	col = mix(col, col * vec3(0.6, 0.58, 0.6), wet * 0.85);
+	glitter *= 1.0 - wet;
+
 	ALBEDO = col;
-	ROUGHNESS = 0.95;
-	SPECULAR = 0.15;
+	ROUGHNESS = mix(0.95, 0.4, wet);
+	SPECULAR = mix(0.15, 0.45, wet);
 }
 
 void light() {
